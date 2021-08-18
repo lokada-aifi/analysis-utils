@@ -42,3 +42,28 @@ makelogfun <- function(outfile, delim = " ", tzone = NULL){
     }
     return(newfun)
 }
+
+
+
+#' Start a timer
+#'
+#' Starts a timer by creating a global variable of Sys.time() that
+#' can be referenced by \code{print_timer()}
+#'
+#' @return NA. Creates a global variable called 'my_timer_start'
+start_timer <- function(){
+    my_timer_start <<- Sys.time()
+}
+
+#' Print Time on Timer
+#'
+#' Prints the time since the last call to \code{start_timer()}
+#'
+#' @return The time on the timer in default difftime units.
+print_timer <- function(digits = 3){
+    if(is.null(my_timer_start)){
+        stop("no timer started")
+    }
+    
+    sprintf("%s %s", round(Sys.time() - my_timer_start, digits), units(Sys.time() - my_timer_start))
+}
