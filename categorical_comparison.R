@@ -18,3 +18,18 @@ prop_summary <- function(df, groupby_col, sumcol){
     dplyr::ungroup()
   df
 }
+
+
+#' Convert table to matrix
+#'
+#' Convert output of table() to a matrix
+#' @param tab A table 
+#' @return A matrix of the input table
+#' examples
+#' mydf <- data.frame()
+tab_to_mat <- function(tab){
+    mat <- matrix(tab, ncol = ncol(tab))
+    colnames(mat) <- colnames(tab)
+    rownames(mat) <- rownames(tab)
+    mat
+}
