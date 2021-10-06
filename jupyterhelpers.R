@@ -48,22 +48,27 @@ makelogfun <- function(outfile, delim = " ", tzone = NULL){
 #' Start a timer
 #'
 #' Starts a timer by creating a global variable of Sys.time() that
-#' can be referenced by \code{print_timer()}
-#'
+#' can be referenced by \code{print_timer()}. 
+#' @param timer_name Name of timer to start. Default "start", creates
+#' a global variable called "my_timer_start". 
 #' @return NA. Creates a global variable called 'my_timer_start'
-start_timer <- function(){
-    my_timer_start <<- Sys.time()
+start_timer <- function(timer_name = "start"){
+    timer_varname <- sprintf("my_timer_%s", timer_name)
+    assign(timer_varname, Sys.time(), envir = .GlobalEnv)
 }
 
 #' Print Time on Timer
 #'
-#' Prints the time since the last call to \code{start_timer()}
-#'
+#' Prints the time since the last call to \code{start_timer()}. Specifying
+#' a timer name can recall a specific timer.
+#' @param timer_name Name of timer to start.Default "start" accesses the 
+#' default timer started with \code{start_timer()}.
 #' @return The time on the timer in default difftime units.
-print_timer <- function(digits = 3){
-    if(is.null(my_timer_start)){
-        stop("no timer started")
+print_timer <- function(timer_name = "start", digits = 3){
+    timer_varname <- sprintf("my_timer_%s", timer_name)
+    if(!exists(timer_varname)){
+        warning(sprintf("No timer named %s exists",timer_name))
+    } else {
+         sprintf("%s %s", round(Sys.time() - get(timer_varname), digits), units(Sys.time() - get(timer_varname)))
     }
-    
-    sprintf("%s %s", round(Sys.time() - my_timer_start, digits), units(Sys.time() - my_timer_start))
 }
