@@ -1,12 +1,12 @@
 # Helper for converting NULL values in a list to na values (ie to preserve all original indices during downstream operations)
+
+# Fix plotly facets
 nullToNA <- function(x) {
             x[sapply(x, is.null)] <- NA
             return(x)
 }
 
-# Fix the facet spacing when a ggplot is converted to a plotly object for a single axis
-# Makes all facets equally sized and spaced along the specified axis
-fix_plotly_facet_axis <- function(ply_plot, axis_fix = "x", padding = 0.05){
+equalize_facets <- function(ply_plot, axis_fix = "x", padding = 0.05){
     # calculate facet spacing based on # of unique axises present
     axis_pattern <- paste0(axis_fix, "axis.*")
     axis_names <- grep(axis_pattern, names(ply_plot$x$layout), value = T)
@@ -74,7 +74,7 @@ fix_plotly_facet_axis <- function(ply_plot, axis_fix = "x", padding = 0.05){
         }
     }
     if(axis_fix == "y"){
-        texty <- sapply(testplot$x$layout$annotations,"[[", "y") 
+        texty <- sapply(ply_plot$x$layout$annotations,"[[", "y") 
         for(i in seq_along(orig_domains)){
             oldmax <- orig_domains[[i]][2]
             newmax <- ranges[[i]][2]
@@ -92,10 +92,9 @@ fix_plotly_facet_axis <- function(ply_plot, axis_fix = "x", padding = 0.05){
     return(ply_plot)
 }
 
-# wrapper to correct all plotly facet spacing along both x and y axis.
 fix_plotly_facets <- function(ply_plot, padding_x = 0.05, padding_y = 0.05){
-    ply_plot <- fix_plotly_facet_axis(ply_plot, axis_fix = "x", padding = padding_x)
-    ply_plot <- fix_plotly_facet_axis(ply_plot, axis_fix = "y", padding = padding_y)
+    ply_plot <- equalize_facets(ply_plot, axis_fix = "x", padding = padding_x)
+    ply_plot <- equalize_facets(ply_plot, axis_fix = "y", padding = padding_y)
 
     return(ply_plot)
 }

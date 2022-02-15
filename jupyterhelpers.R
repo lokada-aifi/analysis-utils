@@ -1,6 +1,7 @@
 # Set output plot dimensions
 plotdim <- function(w, h){
     options(repr.plot.width = w, repr.plot.height = h)
+    
 }
 
 
@@ -71,4 +72,13 @@ print_timer <- function(timer_name = "start", digits = 3){
     } else {
          sprintf("%s %s", round(Sys.time() - get(timer_varname), digits), units(Sys.time() - get(timer_varname)))
     }
+} 
+
+
+displayAllColumns <- function(mat){
+    ncol_mat <- ncol(mat)
+    orig_display <- options()$repr.matrix.max.cols
+    options(repr.matrix.max.cols=ncol_mat)
+    mat
+    options(repr.matrix.max.cols=orig_display)
 }
