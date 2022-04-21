@@ -98,3 +98,34 @@ fix_plotly_facets <- function(ply_plot, padding_x = 0.05, padding_y = 0.05){
 
     return(ply_plot)
 }
+
+
+#' Split a Plot List into even Chunks for Paged Plotting
+#'
+#' @param plot_list A list of ggplots
+#' @param plots_per_page Integer value. Number of plots that should be plotted per page.
+#' @param dummy_panel Optional default plot that should be used as filler on last
+#' page if there are empty spaces. Defaults to a completely blank placeholder.
+#' @param ... Additional arguments passed to `patchwork::wrap_plots()` to format the plots on
+#' a page as desired
+#' @return Plots each 'page' of plots as a separate plot. Intended for use inside of `pdf()`, for example.
+plot_list_to_pages <- function(plot_list, 
+                               plots_per_page, 
+                               dummy_plot = ggplot() + theme_void(),
+                               ...){
+    n_plots <- length(plot_list)
+    n_pgs <- ceiling(n_plots/plots_per_page)
+    for(ipg in 1:n_pgs){
+        istart <- (ipg-1)*plots_per_page + 1
+        iend <- min(ipg*plots_per_page, n_plots)
+        plt_subset <- plot_list[istart:iend]
+        plt_count <- length(plt_subset)
+        if(plt_count < plots_per_page){
+            while(plt_count < plots_per_page){
+                plt_subset <- c(plt_subset, list(dummy_plot))
+                plt_count <- plt_count + 1
+            }
+        }
+        print(patchwork::wrap_plots(plt_subset, ...))
+    }
+}
