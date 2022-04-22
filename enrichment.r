@@ -74,7 +74,7 @@ plot_enrichment_groups <- function(pathways, pathway_list, rank_list, gseaParam 
     pl_list <- lapply(pathways, function(pwy){
         # Get plots for each group
         pw_grp_list <- mapply(SIMPLIFY = FALSE,function(rnk, grp_nm){
-            plotEnrichment(pathway_list[[pwy]], rnk, gseaParam = gseaParam, ticksSize = ticksSize) +
+            fgsea::plotEnrichment(pathway_list[[pwy]], rnk, gseaParam = gseaParam, ticksSize = ticksSize) +
             ggtitle(pwy, subtitle = grp_nm)
         }, rank_list, group_names)
         
@@ -125,7 +125,7 @@ plot_enrichment_groups_signif <- function(gsea_res,
     group_names <- names(rank_list)
     
     signif_gs <- gsea_res %>%
-        filter(get(pval_col) <= pval_cutoff) %>%
+        filter(get(pval_col) <= alpha) %>%
         pull(all_of(pw_col)) %>% 
         unique()
     
@@ -154,4 +154,51 @@ plot_enrichment_groups_signif <- function(gsea_res,
         cat("No Significant Genesets")
     }
 
+}
+
+
+#' Get scaled values for custom breaks
+#'
+#' Get scaled values for custom breaks in a given value vector for use
+#' defining breaks in scale_gradientn(), for example
+#'
+breaks_to_scaledbreaks <- function(breaks, x){
+    rescaled_weights <- scales::rescale(x)
+    rescaled_breaks <- quantile(rescaled_weights, probs = ecdf(x)(breaks))
+    return(rescaled_breaks)
+}
+
+
+#' DotPlot of Pathway Enrichement
+#' 
+plot_signif_pathways <- function(gsea_res, 
+                                 p_col = "padj", 
+                                 p_cutoff = 0.05,
+                                 x_group = "contrast", 
+                                 y_group = "gs", 
+                                 split_y_group = NULL,
+                                 color_col = "NES",
+                                 color_pal = NULL,
+                                 color_name = NULL,
+                                 base_size = 14){
+    gsea_res <- gsea_res %>%
+        filter(get(p_col) <= p_cutoff)
+    
+    g <- ggplot(gsea_res, aes(!!as.name(x_group), !!as.name(y_group))) +
+               geom_point(aes(color = !!as.name(color_col), 
+                              size = -1*log10(!!as.name(p_col)))) +
+        theme_bw(base_size = base_size)
+    
+    if(!is.null(split_y_group)){
+        g <- g +
+            facet_grid(paste0("~", split_y_group), scales = "free_x", space = "free")
+    }
+    
+    if(!is.null(color_pal)){
+        scaled_breaks <- breaks_to_scaledbreaks(color_pal, gsea_res[[color_col]])
+        color_name <- ifelse(is.null(color_name), color_col, color_name)
+        g <- g + scale_color_gradientn(colors = names(color_pal), values = scaled_breaks, na.value = "gray",  name = color_name)
+    }
+    
+    return(g)
 }

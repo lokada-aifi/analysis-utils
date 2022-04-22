@@ -129,3 +129,19 @@ plot_list_to_pages <- function(plot_list,
         print(patchwork::wrap_plots(plt_subset, ...))
     }
 }
+
+#' Save a plotlist to html giving unique dimensions for each plot
+#'
+#' @param plot_list A list of plots
+#' @param output_file Full path to output html file
+#' @param heights Numeric. A vector of heights for each plot. Must be same length as plot_list. Default NULL will use RMD default = 5
+#' @param widths Numeric. A vector of widths for each plot. Must be same length as plot_list. Default NULL will use RMD default = 7
+#' @param titles Character. A vector of titles for each plot. Must be same length as plot_list. Default NULL will use no titles. Titles are
+#' recommended to make the output file searchable for easier navigation
+plotlist_to_html <- function(plot_list, output_file, heights = NULL, widths = NULL, titles = NULL, in_rmd = "plotlist_to_html.Rmd",...){
+  rmarkdown::render(input = in_rmd,
+                    params = list(plot_list = plot_list, heights = heights, widths = widths, titles = titles),
+                    output_file = output_file,
+                   ...)
+}
+# plotlist_to_html(plot_list,"test.html", c(5,7,10), c(7,12, 20), c("A","B","C"))

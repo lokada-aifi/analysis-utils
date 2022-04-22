@@ -1,0 +1,140 @@
+---
+title: ""
+output: 
+  html_document
+params:
+  plot_list: NULL
+  heights: NULL
+  widths: NULL
+  titles: NULL
+---
+
+<!-- This RMarkdown document renders an input list of plots with different dimensions -->
+<!-- into one html for better sizing compared to pdf -->
+
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE)
+
+```
+
+```{css style_definitions}
+# Allow display of large images without shrinking to page width
+<style>
+  .superbigimage{
+      overflow-x:scroll;
+  }
+  .superbigimage img{
+     max-width: none;
+  }
+</style>
+    
+```  
+
+
+```{r functions, include = FALSE}
+#' Knit a plot as a subchunk
+#'
+#' Knit a plot as a subchunk so its dimensions can be specified individually. Based
+#' on code found here: http://michaeljw.com/blog/post/subchunkify/
+#'
+#' Allows individual plots within the same chunk to be knit as subchunks with
+#' unique chunk options. Plots can be output in a loop with each plot using
+#' different dimensions, ie dynamic dimensions based on number of x and/or y
+#' category levels. Parent chunk should have chunk options 'results = "as-is"'
+#' to ensure proper output. Note that this will create a "figures" directory in
+#' the directory containing the Rmarkdown file containing the chunk plots. Ensure
+#' that Rmarkdown  yaml has 'self_contained: true' in html document section (or equivalent)
+#'
+#' @param g The plot object
+#' @param subchunk_name Character value. Unique name of Rmarkdown subchunk to be generated.
+#' @param quiet_knit Logical value, default TRUE. Passed to \code{knitr::knit()}, should the subchunk
+#' be knit "quietly" (no progress bar or messages)
+#' @param chunk_opt_list Named list of chunk options for the subchunk. Can take any chunk
+#' options available to a normal chunk.
+#' @export
+#' @examples
+#' \dontrun{
+#' # This will generate a file in 'figures' subdirectory of working directory
+#' library(ggplot2)
+#' g_example <- ggplot(data.frame(x=1:10, y = 1:10), aes(x, y)) + geom_point()
+#' chunk_opt_l <- list(fig.height=10, fig.width=12, warning=TRUE)
+#' make_subchunk(g_example, "test_chunk", chunk_opt_list = chunk_opt_l)
+#' }
+#'
+
+make_subchunk <- function(g, subchunk_name, quiet_knit = TRUE, chunk_opt_list = list(fig.height=7, fig.width=5, warning = TRUE)) {
+  if(is.null(subchunk_name)){
+    subchunk_name <- paste0(as.numeric(Sys.time()), "_",)
+  }
+
+  g_deparsed <- paste0(deparse(
+    function() {g}
+  ), collapse = '')
+
+  # construct chunk option string
+  if(!is.null(chunk_opt_list)){
+    option_names <- names(chunk_opt_list)
+    option_string_list <- sapply(1:length(chunk_opt_list), function(i){
+      val <- chunk_opt_list[[i]]
+      val_type <- class(val)
+      quote_string <- ifelse(val_type=="character","'","")
+      val_fmt <- paste0(quote_string, val, quote_string)
+      paste(names(chunk_opt_list)[i], val_fmt, sep = "=")
+    })
+    option_string <- paste(c(", ",option_string_list), collapse = ", ")
+  } else {
+    option_string <- ""
+  }
+
+  # construct full chunk
+  sub_chunk <- paste0("\n```{r ", subchunk_name, option_string, "}",
+                      "\n(", g_deparsed, ")()",
+                      "\n```")
+
+  # knit chunk
+  cat(knitr::knit(text = knitr::knit_expand(text = sub_chunk), quiet = quiet_knit))
+}
+
+```
+
+```{r validate_input, include = FALSE}
+plot_list <- params$plot_list
+heights <- params$heights
+widths <- params$widths
+titles <- params$titles
+
+if(is.null(titles)){
+  title <- rep("", length(plot_list))  
+}
+if(is.null(widths)){
+  title <- rep(7, length(plot_list))  
+}
+if(is.null(heights)){
+  title <- rep(5, length(plot_list))  
+}
+
+assertthat::assert_that(length(plot_list) == length(heights))
+assertthat::assert_that(length(plot_list) == length(heights))
+assertthat::assert_that(length(plot_list) == length(titles))
+```  
+
+<div class="superbigimage">  
+
+```{r plots, echo=FALSE, results = "asis"}
+
+for(i in seq_along(plot_list)){
+    cat(paste0("\n### ", titles[i],"\n"))
+    make_subchunk(plot_list[[i]], 
+                  subchunk_name = paste0("plot_",i), 
+                  quiet_knit = TRUE, 
+                  chunk_opt_list = list(fig.height=heights[i], 
+                                        fig.width=widths[i], 
+                                        warning = TRUE)) 
+    cat("\n\n") 
+
+}
+
+```  
+</div>   
