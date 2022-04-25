@@ -14,7 +14,7 @@ params:
 
 
 ```{r setup, include=FALSE}
-library(knitr)
+require(knitr)
 knitr::opts_chunk$set(echo = FALSE, message = FALSE)
 
 ```
