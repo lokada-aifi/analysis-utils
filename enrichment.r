@@ -1,4 +1,4 @@
-#' Plot Enrichment as in # Same plot as in fgsea::plotEnrichment() but with flexible formatting options
+#' Plot Enrichment as in fgsea::plotEnrichment() but with flexible formatting options
 #'
 #' @param pathway Gene set to plot. Inherited from fgsea::plotEnrichment() 
 #' @param stats Gene-level statistics (weights that were used for pathway enrichment) Inherited from fgsea::plotEnrichment().
@@ -8,15 +8,18 @@
 #' @param base_size Positive numeric value, global text size parameter
 #' @param theme_ls List of named arguments passed to pass to ggplot2::theme()
 #' @return A ggplot2 object
-plotEnrichment_fmt <- function(pathway, stats, gseaParam = 1, ticksSize = 0.2, enrichmentcolor = "green", base_size = 10, theme_ls = NULL){
+plotEnrichment_fmt <- function(pathway, stats, gseaParam = 1, ticksSize = 0.2, enrichmentcolor = "green", enrichmentkey ="", base_size = 10, theme_ls = NULL){
     default_theme_ls <- list(
         panel.border = element_blank(), 
-        panel.grid.minor = element_blank()
+        panel.grid.minor = element_blank(),
+        legend.position = "none"
     )
     unspec_param <- setdiff(names(default_theme_ls), names(theme_ls))
     if(length(unspec_param) > 0){
         theme_ls <- c(theme_ls, default_theme_ls[unspec_param])
     }
+    col_key = c(enrichmentcolor)
+    names(col_key) <- enrichmentkey
     
     rnk <- rank(-stats)
     ord <- order(rnk)
@@ -44,7 +47,8 @@ plotEnrichment_fmt <- function(pathway, stats, gseaParam = 1, ticksSize = 0.2, e
                    colour = "red", 
                    linetype = "dashed") + 
         geom_hline(yintercept = 0, colour = "black") + 
-        geom_line(color = enrichmentcolor) + 
+        geom_line(aes(color = enrichmentkey)) + 
+        scale_color_manual(values = col_key) +
         theme_bw(base_size = base_size) + 
         geom_segment(data = data.frame(x = pathway), 
                      mapping = aes(x = x, y = -diff/2, xend = x, yend = diff/2), size = ticksSize) + 
@@ -133,18 +137,30 @@ plot_enrichment_groups_signif <- function(gsea_res,
         pw_plotlist <- lapply(signif_gs, function(pwy){
             pw_grp_list <- mapply(function(rnk, grp_nm){
                 p_res <- gsea_res %>%
-                    filter(get(pw_col) == pwy, get(group_col) == grp_nm) %>%
-                    pull(all_of(pval_col)) 
-                is_signif <- p_res <= alpha
-                col <- signif_col[[is_signif + 1]]
-                plotEnrichment_fmt(pathway = pathway_list[[pwy]], 
-                                   stats = rnk, 
-                                   gseaParam = gseaParam, 
-                                   ticksSize = ticksSize, 
-                                   enrichmentcolor = col, 
-                                   base_size = base_size, 
-                                   theme_ls= theme_ls) +
-                    ggtitle(pwy, subtitle = grp_nm)
+                    filter(get(pw_col) == pwy, get(group_col) == grp_nm) 
+                if(nrow(p_res) < 1){  # group does not have a result for this pathway, likely too few genes in pw had DEG results (ie low expression, etc)
+                    ggplot(data.frame(x=c(0,2),y=c(0,2)), aes(x,y)) + 
+                        theme_void(base_size = base_size) +
+                        scale_x_continuous(limits = c(0,2)) +
+                        scale_y_continuous(limits = c(0,2)) +
+                        geom_text(x=1, y=1, label = "No pathway enrichment results") +
+                        ggtitle(pwy, subtitle = grp_nm) 
+                } else {
+                    p_res <- p_res %>%
+                        pull(all_of(pval_col)) 
+                    is_signif <- as.numeric(p_res <= alpha)
+                    if(length(is_signif)<1) stop(sprintf("group: %s, geneset: %s ", grp_nm, pwy))
+                    col <- signif_col[[is_signif + 1]]
+                    plotEnrichment_fmt(pathway = pathway_list[[pwy]], 
+                                       stats = rnk, 
+                                       gseaParam = gseaParam, 
+                                       ticksSize = ticksSize, 
+                                       enrichmentcolor = col, 
+                                       base_size = base_size, 
+                                       theme_ls= theme_ls) +
+                        ggtitle(pwy, subtitle = grp_nm) 
+                        
+                }
             }, rank_list, group_names, SIMPLIFY = FALSE)
             pw_panel <- patchwork::wrap_plots(pw_grp_list, ...)
             return(pw_panel)
