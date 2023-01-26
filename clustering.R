@@ -83,7 +83,7 @@ make_cluster_hm_meta <- function(meta,
         df_counts<- df_counts %>%
             tidyr::spread(key = all_of(meta_col), value = n) %>%
             tibble::column_to_rownames(cluster_col) %>%
-            mutate_all(replace_na,0)
+            mutate_all(tidyr::replace_na, 0)
         hm_name <- "Z-score"
     } else if (value == "percent"){
         df_counts<- df_counts %>%
@@ -92,7 +92,7 @@ make_cluster_hm_meta <- function(meta,
             select(-n) %>%
             tidyr::spread(key = all_of(meta_col), value = pct) %>%
             tibble::column_to_rownames(cluster_col) %>%
-            mutate_all(replace_na,0)
+            mutate_all(tidyr::replace_na,0)
         hm_name <- "Percent"
     }
     mat_counts <- as.matrix(df_counts)

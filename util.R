@@ -30,3 +30,20 @@ remove_delim_level <- function(stringval, level = 1, delim = "/", keep_last = NU
 
     return(path_ls)
 }
+
+#' Summarize loaded packages in table for portability
+#' @return A data.frame of a summary of packages described in \code{sessionInfo()}
+summarize_packages <- function(){
+    types <- c("basePkgs", "otherPkgs", 'loadedOnly')
+    out_df <- purrr::map_df(types,.f= function(x){
+        info <- sessionInfo()[[x]]
+        if(is.list(info)){
+            data.frame(package = names(info), type = x, version = sapply(info, '[[','Version'))
+        } else {
+            data.frame(package = info, type = x, version = NA)
+        }
+    })
+    row.names(out_df) <- NULL
+    out_df
+    
+}

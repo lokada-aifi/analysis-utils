@@ -57,8 +57,8 @@ htest_list_to_df <- function(htest_result, remove_unused_cols = TRUE){
         lower.conf.limit = as.numeric(ifelse(!is.null(htest_result$conf.int), htest_result$conf.int[[1]], NA)),
         upper.conf.limit = as.numeric(ifelse(!is.null(htest_result$conf.int), htest_result$conf.int[[2]], NA)),
         conf.level = as.numeric(ifelse(!is.null(htest_result$conf.int), attributes(htest_result$conf.int)$conf.level, NA)),
-        null.value = as.numeric(htest_result$null.value),
-        alternative = htest_result$alternative
+        null.value = as.numeric(ifelse(!is.null(htest_result$null.value),htest_result$null.value,NA)),
+        alternative = ifelse(!is.null(htest_result$alternative), htest_result$alternative, NA)
     )
     
     if(remove_unused_cols){

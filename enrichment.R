@@ -124,6 +124,7 @@ plot_enrichment_groups_signif <- function(gsea_res,
                                           signif_col = c(`ns` = "blue", `signif`= "orange"),
                                           base_size = 12,
                                           theme_ls = NULL,
+                                          verbose = FALSE,
                                           ...){
     assertthat::assert_that(all(names(rank_list) %in% unique(gsea_res[[group_col]])))
     group_names <- names(rank_list)
@@ -135,10 +136,13 @@ plot_enrichment_groups_signif <- function(gsea_res,
     
     if(length(signif_gs) > 0){
         pw_plotlist <- lapply(signif_gs, function(pwy){
+            if(verbose){
+                message(pwy)
+            }
             pw_grp_list <- mapply(function(rnk, grp_nm){
                 p_res <- gsea_res %>%
                     filter(get(pw_col) == pwy, get(group_col) == grp_nm) 
-                if(nrow(p_res) < 1){  # group does not have a result for this pathway, likely too few genes in pw had DEG results (ie low expression, etc)
+                if(nrow(p_res) < 1 || all(is.na(p_res[[pval_col]]))){  # group does not have a result for this pathway, likely too few genes in pw had DEG results (ie low expression, etc)
                     ggplot(data.frame(x=c(0,2),y=c(0,2)), aes(x,y)) + 
                         theme_void(base_size = base_size) +
                         scale_x_continuous(limits = c(0,2)) +

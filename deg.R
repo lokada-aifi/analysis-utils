@@ -261,7 +261,8 @@ plot_volcano <- function(dat,
                          feat_label = NULL, 
                          feat_col = NULL, 
                          labelsize = 10,
-                         alpha = 1){
+                         alpha = 1,
+                        max.overlaps=10){
     assign_change <- function(p, p_cutoff, es, es_cutoff){
         change <- rep("", length(p))
         iUp <- which(p < p_cutoff & es > es_cutoff)
@@ -287,7 +288,7 @@ plot_volcano <- function(dat,
         temp <- temp %>%
             mutate(plotlabel = ifelse(get(feat_col) %in% feat_label, get(feat_col), ""))
         g_volcano <- g_volcano +
-            ggrepel::geom_text_repel(data = temp, color = "black", size = labelsize, aes(label = plotlabel))
+            ggrepel::geom_text_repel(data = temp, color = "black", size = labelsize, aes(label = plotlabel), max.overlaps = max.overlaps)
         
     }
                            
@@ -320,7 +321,10 @@ plot_upset <- function(deg_df,
                        es_col = "logFC", 
                        genecol = "primerid", 
                        group_col = "contrast",
-                       convert_grob = TRUE){
+                       convert_grob = TRUE,
+                       rel_heights = c(3,1), 
+                       rel_widths = c(2,3),
+                      ...){
     us_df <- deg_df %>%
         dplyr::filter(get(p_col) <= p_cutoff, (abs(get(es_col)) >= es_cutoff)| is.na(get(es_col)) & es_cutoff == 0) %>%
         dplyr::select(all_of(c(genecol, group_col))) %>%
@@ -331,9 +335,9 @@ plot_upset <- function(deg_df,
     
     comps <- unique(deg_df[[group_col]])
     
-    plt <- UpSetR::upset(us_df, sets = intersect(comps, colnames(us_df)), text.scale = 2)
+    plt <- UpSetR::upset(us_df, sets = intersect(comps, colnames(us_df)), text.scale = 2,...)
     if(convert_grob){
-        plt <- convert_upset(plt)
+        plt <- convert_upset(plt, rel_heights=rel_heights, rel_widths= rel_widths)
     } 
     return(plt)
 }
