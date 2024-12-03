@@ -138,9 +138,11 @@ plot_list_to_pages <- function(plot_list,
 #' @param widths Numeric. A vector of widths for each plot. Must be same length as plot_list. Default NULL will use RMD default = 7
 #' @param titles Character. A vector of titles for each plot. Must be same length as plot_list. Default NULL will use no titles. Titles are
 #' recommended to make the output file searchable for easier navigation
-plotlist_to_html <- function(plot_list, output_file, heights = NULL, widths = NULL, titles = NULL, in_rmd = "plotlist_to_html.Rmd",...){
+#' @param title Character. Single string value to use as HTML title. Default ""
+
+plotlist_to_html <- function(plot_list, output_file, heights = NULL, widths = NULL, titles = NULL, title = '', in_rmd = "plotlist_to_html.Rmd",...){
   rmarkdown::render(input = in_rmd,
-                    params = list(plot_list = plot_list, heights = heights, widths = widths, titles = titles),
+                    params = list(plot_list = plot_list, heights = heights, widths = widths, titles = titles, title=title),
                     output_file = output_file,
                    ...)
 }

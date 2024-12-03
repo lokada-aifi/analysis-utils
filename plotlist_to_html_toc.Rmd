@@ -1,5 +1,5 @@
 ---
-title: ""
+title: "`r params$title`"
 output: 
   html_document:
       toc: true
@@ -9,6 +9,7 @@ params:
   heights: NULL
   widths: NULL
   titles: NULL
+  title: ""
 ---
 
 <!-- This RMarkdown document renders an input list of plots with different dimensions -->
